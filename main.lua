@@ -1,6 +1,8 @@
 --includes
 Object = require 'libraries/classic/classic'
+Timer = require 'libraries/enhanced_timer/EnhancedTimer'
 Input = require 'libraries/boipushy/Input'
+fn = require 'libraries/moses/moses'
 
 local MODES = 
 {
@@ -11,7 +13,15 @@ local MODES =
 local MODE = 0
 
 function love.load()
+
+	a = {1, 2, '3', 4, '5', 6, 7, true, 9, 10, 11, a = 1, b = 2, c = 3, {1, 2, 3}}
+	b = {1, 1, 3, 4, 5, 6, 7, false}
+	c = {'1', '2', '3', 4, 5, 6, 7}
+	d = {1, 9, 3, 4, 5, 6}	
 	
+	local e = fn.intersection(b, d)
+	fn.each(e, print)
+
 	counter_table = createCounterTable()
     counter_table:sum()
 	print(counter_table.value)
@@ -35,7 +45,14 @@ function love.load()
 	frame = 0
 	
 	--test_instance = Test()
-	circle_instance = HyperCircle(400,300,50, 10,120)
+	--circle_instance = HyperCircle(400,300,50, 10,120)
+
+	timer = Timer()
+	circle = {radius = 24}
+	gw = 600
+	gh = 800
+	hp_bar_bg = {x = gw/2, y = gh/2, w = 200, h = 40}
+    hp_bar_fg = {x = gw/2, y = gh/2, w = 200, h = 40}
 
 	BindInput()
 	
@@ -66,9 +83,31 @@ function createCounterTable()
     }
 end
 
+function love.keypressed(key)
+	function love.keypressed(key)
+		if key == 'e' then
+			timer:cancel('shrink')
+			timer:tween('expand', 6, circle, {radius = 96}, 'in-out-cubic')
+		elseif key == 's' then
+			timer:cancel('expand')
+			timer:tween('shrink', 6, circle, {radius = 24}, 'in-out-cubic')
+		end
+	end
+	if key == 'd' then
+		timer:tween('fg', 0.5, hp_bar_fg, {w = hp_bar_fg.w - 25}, 'in-out-cubic')
+		timer:after('bg_after', 0.25, function()
+            timer:tween('bg_tween', 0.5, hp_bar_bg, {w = hp_bar_bg.w - 25}, 'in-out-cubic')
+        end)
+	end
+
+    if key == 'r' then
+        timer:after('r_key_press', 2, function() print(love.math.random()) end)
+    end
+end
 
 function love.update(dt)
-	circle_instance:update()
+	timer:update(dt)
+	--circle_instance:update()
 	frame = frame + 1
 	if MODE == MODES.DEBUG then
 		if input:pressed('test') then print('pressed') end
@@ -91,13 +130,18 @@ function love.update(dt)
 end
 
 function love.draw()
-	circle_instance:draw()
-
+	--circle_instance:draw()
+	love.graphics.circle('fill', 400, 300, circle.radius)
+	--[[love.graphics.setColor(222, 64, 64)
+    love.graphics.rectangle('fill', hp_bar_bg.x, hp_bar_bg.y - hp_bar_bg.h/2, hp_bar_bg.w, hp_bar_bg.h)
+    love.graphics.setColor(222, 96, 96)
+    love.graphics.rectangle('fill', hp_bar_fg.x, hp_bar_fg.y - hp_bar_fg.h/2, hp_bar_fg.w, hp_bar_fg.h)
+    love.graphics.setColor(255, 255, 255)]]
+	
 	if MODE == MODES.DEBUG then
         fps = math.floor( 1.0 / love.timer.getDelta() )
         love.graphics.print("FPS: "..tostring(fps , 10, 10) ) 
     end
-	
 end
 
 function recursiveEnumerate(folder, file_list)
