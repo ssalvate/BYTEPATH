@@ -4,6 +4,9 @@ Timer = require 'libraries/enhanced_timer/EnhancedTimer'
 Input = require 'libraries/boipushy/Input'
 fn = require 'libraries/moses/moses'
 
+require 'utils'
+require 'GameObject'
+
 local MODES = 
 {
     DEBUG = 0,
@@ -13,74 +16,63 @@ local MODES =
 local MODE = 0
 
 function love.load()
-
-	a = {1, 2, '3', 4, '5', 6, 7, true, 9, 10, 11, a = 1, b = 2, c = 3, {1, 2, 3}}
-	b = {1, 1, 3, 4, 5, 6, 7, false}
-	c = {'1', '2', '3', 4, 5, 6, 7}
-	d = {1, 9, 3, 4, 5, 6}	
-	
-	local e = fn.intersection(b, d)
-	fn.each(e, print)
-
-	counter_table = createCounterTable()
-    counter_table:sum()
-	print(counter_table.value)
-	
 	--load object folder files
 	local object_files = {}
     recursiveEnumerate('objects', object_files)
-	
 	if MODE == MODES.DEBUG then
-		print("Loading Files: ")
+		print("Loading Obj Files: ")
 		for _, file in pairs(object_files) do
 			print("    " .. file)
 		end
 	end
-	
 	requireFiles(object_files)
 
+	--load room folder files
+	local room_files = {}
+    recursiveEnumerate('rooms', room_files)
+	if MODE == MODES.DEBUG then
+		print("Loading Room Files: ")
+		for _, file in pairs(room_files) do
+			print("    " .. file)
+		end
+	end
+	requireFiles(room_files)
+
 	--set window properties
-    love.window.setMode(800, 600, {vsync = 1})
+    --love.window.setMode(800, 600, {vsync = 1})
+	
 	--Init Debug vars
 	frame = 0
-	
-	--test_instance = Test()
-	--circle_instance = HyperCircle(400,300,50, 10,120)
 
 	timer = Timer()
-	circle = {radius = 24}
-	gw = 600
-	gh = 800
-	hp_bar_bg = {x = gw/2, y = gh/2, w = 200, h = 40}
-    hp_bar_fg = {x = gw/2, y = gh/2, w = 200, h = 40}
+	input = Input()
+	BindInputs()
 
-	BindInput()
-	
+	current_room = nil
+	--gotoRoom('Stage')
 end
 
-function BindInput()
-	input = Input()
-    input:bind('mouse1', 'test')
-	--Gamepad
+-- Room --
+function gotoRoom(room_type, ...)
+    current_room = _G[room_type](...)
+end
+
+-- Set input callbacks Boipushy --
+function BindInputs()
+	input:bind('mouse1', 'test')
+	input:bind('f1', function() gotoRoom('Stage') end)
+	input:bind('f2', function() gotoRoom('RectangleRoom') end)
+    input:bind('f3', function() gotoRoom('PolygonRoom') end)
+	-- Gamepad Controller --
 	input:bind('dpleft', 'left')
-    input:bind('dpright', 'right')
-    input:bind('dpup', 'up')
-    input:bind('dpdown', 'down')
+	input:bind('dpright', 'right')
+	input:bind('dpup', 'up')
+	input:bind('dpdown', 'down')
 	input:bind('l2', 'trigger')
 	input:bind('leftx', 'left_horizontal')
-    input:bind('lefty', 'left_vertical')
-    input:bind('rightx', 'right_horizontal')
-    input:bind('righty', 'right_vertical')
-end
-
-function createCounterTable()
-    return {
-		a=1,
-		b=2,
-		c=3,
-        value = 0,
-        sum = function(self) self.value = self.a + self.b + self.c end,
-    }
+	input:bind('lefty', 'left_vertical')
+	input:bind('rightx', 'right_horizontal')
+	input:bind('righty', 'right_vertical')
 end
 
 function love.keypressed(key)
@@ -107,7 +99,8 @@ end
 
 function love.update(dt)
 	timer:update(dt)
-	--circle_instance:update()
+	if current_room then current_room:update(dt) end
+
 	frame = frame + 1
 	if MODE == MODES.DEBUG then
 		if input:pressed('test') then print('pressed') end
@@ -130,13 +123,7 @@ function love.update(dt)
 end
 
 function love.draw()
-	--circle_instance:draw()
-	love.graphics.circle('fill', 400, 300, circle.radius)
-	--[[love.graphics.setColor(222, 64, 64)
-    love.graphics.rectangle('fill', hp_bar_bg.x, hp_bar_bg.y - hp_bar_bg.h/2, hp_bar_bg.w, hp_bar_bg.h)
-    love.graphics.setColor(222, 96, 96)
-    love.graphics.rectangle('fill', hp_bar_fg.x, hp_bar_fg.y - hp_bar_fg.h/2, hp_bar_fg.w, hp_bar_fg.h)
-    love.graphics.setColor(255, 255, 255)]]
+	if current_room then current_room:draw() end
 	
 	if MODE == MODES.DEBUG then
         fps = math.floor( 1.0 / love.timer.getDelta() )
@@ -144,6 +131,7 @@ function love.draw()
     end
 end
 
+-- Load --
 function recursiveEnumerate(folder, file_list)
 	local items = love.filesystem.getDirectoryItems(folder)
 	for _, item in ipairs(items) do
@@ -159,9 +147,7 @@ end
 function requireFiles(files)
 	for _, file in ipairs(files) do
 		local file = file:sub(1, -5)
-		local name = file:match("^.+/(.+)$")
 		require(file)
-		--_G[name] = require(file) --Add objects created to Lua global table
 	end
 end
 

@@ -1,16 +1,14 @@
-Circle = Object:extend()
+Circle = GameObject:extend()
 
-function Circle:new(x, y, radius)
-    self.x = x
-    self.y = y
-    self.radius = radius
-    self.creation_time = love.timer.getTime()
+function Circle:new(x, y, opts)
+    Circle.super.new(self, x, y, opts)
+    self.r = random(10, 50)
 end
 
 function Circle:update(dt)
-    
+    Circle.super.update(self, dt)
 end
 
 function Circle:draw()
-    love.graphics.circle('fill', self.x, self.y, self.radius)
+    love.graphics.circle('fill', self.x, self.y, self.r)
 end
