@@ -3,19 +3,32 @@ Object = require 'libraries/classic/classic'
 Timer = require 'libraries/enhanced_timer/EnhancedTimer'
 Input = require 'libraries/boipushy/Input'
 fn = require 'libraries/moses/moses'
+Camera = require 'libraries/hump/camera'
+Physics = require 'libraries/windfield'
 
 require 'utils'
 require 'GameObject'
 
-local MODES = 
+MODES = 
 {
     DEBUG = 0,
     RELEASE = 1 
 }
 
-local MODE = 0
+MODE = 0
+
+-- Resize the game window --
+function resize(s)
+    love.window.setMode(s*gw, s*gh, {vsync = 1}) 
+    sx, sy = s, s
+end
 
 function love.load()
+	--set window properties
+	
+	love.graphics.setDefaultFilter('nearest', 'nearest')
+    love.graphics.setLineStyle('rough')
+
 	--load object folder files
 	local object_files = {}
     recursiveEnumerate('objects', object_files)
@@ -38,31 +51,54 @@ function love.load()
 	end
 	requireFiles(room_files)
 
-	--set window properties
-    --love.window.setMode(800, 600, {vsync = 1})
-	
 	--Init Debug vars
 	frame = 0
 
 	timer = Timer()
 	input = Input()
+	camera = Camera()
 	BindInputs()
-
+	
 	current_room = nil
 	--gotoRoom('Stage')
+	resize(2) --Had to move after camera()
 end
 
 -- Room --
 function gotoRoom(room_type, ...)
+	if current_room and current_room.destroy then current_room:destroy() end
     current_room = _G[room_type](...)
 end
 
 -- Set input callbacks Boipushy --
 function BindInputs()
 	input:bind('mouse1', 'test')
-	input:bind('f1', function() gotoRoom('Stage') end)
-	input:bind('f2', function() gotoRoom('RectangleRoom') end)
-    input:bind('f3', function() gotoRoom('PolygonRoom') end)
+	input:bind('left', 'left')
+    input:bind('right', 'right')
+
+	-- WASD --
+	input:bind('a', 'left')
+    input:bind('d', 'right')
+	-- F# keys --
+	input:bind('f1', function()-- Memory Info  --
+		print()
+		print("----------Memory Info-----------------")
+        print("Before collection: " .. collectgarbage("count")/1024)
+        collectgarbage()
+        print("After collection: " .. collectgarbage("count")/1024)
+        print("Object count: ")
+        local counts = type_count()
+        for k, v in pairs(counts) do print(k, v) end
+        print("-------------------------------------")
+    end)
+	input:bind('f2', function() gotoRoom('Stage') end)
+	input:bind('f3', function() 
+        if current_room then
+            current_room:destroy()
+            current_room = nil
+        end
+    end)
+	input:bind('f4', function() camera:shake(4, 60, 1) end)
 	-- Gamepad Controller --
 	input:bind('dpleft', 'left')
 	input:bind('dpright', 'right')
@@ -76,29 +112,11 @@ function BindInputs()
 end
 
 function love.keypressed(key)
-	function love.keypressed(key)
-		if key == 'e' then
-			timer:cancel('shrink')
-			timer:tween('expand', 6, circle, {radius = 96}, 'in-out-cubic')
-		elseif key == 's' then
-			timer:cancel('expand')
-			timer:tween('shrink', 6, circle, {radius = 24}, 'in-out-cubic')
-		end
-	end
-	if key == 'd' then
-		timer:tween('fg', 0.5, hp_bar_fg, {w = hp_bar_fg.w - 25}, 'in-out-cubic')
-		timer:after('bg_after', 0.25, function()
-            timer:tween('bg_tween', 0.5, hp_bar_bg, {w = hp_bar_bg.w - 25}, 'in-out-cubic')
-        end)
-	end
-
-    if key == 'r' then
-        timer:after('r_key_press', 2, function() print(love.math.random()) end)
-    end
 end
 
 function love.update(dt)
 	timer:update(dt)
+	camera:update(dt)
 	if current_room then current_room:update(dt) end
 
 	frame = frame + 1
@@ -130,6 +148,48 @@ function love.draw()
         love.graphics.print("FPS: "..tostring(fps , 10, 10) ) 
     end
 end
+
+-- Memory Usage/Info Start--
+function count_all(f)
+    local seen = {}
+    local count_table
+    count_table = function(t)
+        if seen[t] then return end
+            f(t)
+	    seen[t] = true
+	    for k,v in pairs(t) do
+	        if type(v) == "table" then
+		    count_table(v)
+	        elseif type(v) == "userdata" then
+		    f(v)
+	        end
+	end
+    end
+    count_table(_G)
+end
+
+function type_count()
+    local counts = {}
+    local enumerate = function (o)
+        local t = type_name(o)
+        counts[t] = (counts[t] or 0) + 1
+    end
+    count_all(enumerate)
+    return counts
+end
+
+global_type_table = nil
+function type_name(o)
+    if global_type_table == nil then
+        global_type_table = {}
+            for k,v in pairs(_G) do
+	        global_type_table[v] = k
+	    end
+	global_type_table[0] = "table"
+    end
+    return global_type_table[getmetatable(o) or 0] or "Unknown"
+end
+-- Memory Usage/Info End--
 
 -- Load --
 function recursiveEnumerate(folder, file_list)

@@ -7,13 +7,18 @@ function UUID()
     return (("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"):gsub("[xy]", fn))
 end
 
-function random(min, max)
+--[[function random(min, max)
     if not max then -- if max is nil then it means only one value was passed in
         return love.math.random()*min
     else
         if min > max then min, max = max, min end -- values can come in any order
         return love.math.random()*(max - min) + min
     end
+end]]
+
+function random(min, max)
+    local min, max = min or 0, max or 1
+    return (min > max and (love.math.random()*(min - max) + max)) or (love.math.random()*(max - min) + min)
 end
 
 -- Returns distance between two coordinates --
