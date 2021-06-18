@@ -7,15 +7,6 @@ function UUID()
     return (("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"):gsub("[xy]", fn))
 end
 
---[[function random(min, max)
-    if not max then -- if max is nil then it means only one value was passed in
-        return love.math.random()*min
-    else
-        if min > max then min, max = max, min end -- values can come in any order
-        return love.math.random()*(max - min) + min
-    end
-end]]
-
 function random(min, max)
     local min, max = min or 0, max or 1
     return (min > max and (love.math.random()*(min - max) + max)) or (love.math.random()*(max - min) + min)
@@ -42,4 +33,19 @@ function printText(...)
         string = string .. arg
     end
     print(string)
+end
+
+function pushRotate(x, y, r)
+    love.graphics.push()
+    love.graphics.translate(x, y)
+    love.graphics.rotate(r or 0)
+    love.graphics.translate(-x, -y)
+end
+
+function pushRotateScale(x, y, r, sx, sy)
+    love.graphics.push()
+    love.graphics.translate(x, y)
+    love.graphics.rotate(r or 0)
+    love.graphics.scale(sx or 1, sy or sx or 1)
+    love.graphics.translate(-x, -y)
 end

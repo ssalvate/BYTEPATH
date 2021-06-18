@@ -8,6 +8,7 @@ Physics = require 'libraries/windfield'
 
 require 'utils'
 require 'GameObject'
+require 'globals'
 
 MODES = 
 {
