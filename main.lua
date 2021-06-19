@@ -12,11 +12,12 @@ require 'globals'
 
 MODES = 
 {
-    DEBUG = 0,
-    RELEASE = 1 
+    DEBUG = 0,  -- Memory Dump, files loading, ship aim  --
+	DISPLAY_INFO = 1, -- Keep fps counter etc  --
+    RELEASE = 2 
 }
 
-MODE = 0
+MODE = 1
 
 -- Resize the game window --
 function resize(s)
@@ -61,14 +62,18 @@ function love.load()
 	BindInputs()
 	
 	current_room = nil
+	current_room_name = nil
 	--gotoRoom('Stage')
 	resize(2) --Had to move after camera()
+	
+	slow_amount = 1
 end
 
 -- Room --
 function gotoRoom(room_type, ...)
 	if current_room and current_room.destroy then current_room:destroy() end
     current_room = _G[room_type](...)
+	current_room_name = room_type
 end
 
 -- Set input callbacks Boipushy --
@@ -76,10 +81,14 @@ function BindInputs()
 	input:bind('mouse1', 'test')
 	input:bind('left', 'left')
     input:bind('right', 'right')
+	input:bind('up', 'up')
+	input:bind('down', 'down')
 
 	-- WASD --
 	input:bind('a', 'left')
     input:bind('d', 'right')
+	input:bind('w', 'up')
+	input:bind('s', 'down')
 	-- F# keys --
 	input:bind('f1', function()-- Memory Info  --
 		print()
@@ -112,13 +121,16 @@ function BindInputs()
 	input:bind('righty', 'right_vertical')
 end
 
-function love.keypressed(key)
+-- Slow down time for duration  --
+function slow(amount, duration)
+    slow_amount = amount
+    timer:tween('slow', duration, _G, {slow_amount = 1}, 'in-out-cubic')
 end
 
 function love.update(dt)
-	timer:update(dt)
-	camera:update(dt)
-	if current_room then current_room:update(dt) end
+	timer:update(dt*slow_amount)
+    camera:update(dt*slow_amount)
+    if current_room then current_room:update(dt*slow_amount) end
 
 	frame = frame + 1
 	if MODE == MODES.DEBUG then
@@ -143,11 +155,29 @@ end
 
 function love.draw()
 	if current_room then current_room:draw() end
-	
-	if MODE == MODES.DEBUG then
-        fps = math.floor( 1.0 / love.timer.getDelta() )
-        love.graphics.print("FPS: "..tostring(fps , 10, 10) ) 
+
+	if flash_frames then 
+        flash_frames = flash_frames - 1
+        if flash_frames == -1 then flash_frames = nil end
     end
+
+    if flash_frames then
+        love.graphics.setColor(background_color)
+        love.graphics.rectangle('fill', 0, 0, sx*gw, sy*gh)
+        love.graphics.setColor(255, 255, 255)
+    end
+
+	if MODE < 2 then
+        fps = math.floor( 1.0 / love.timer.getDelta() )
+        love.graphics.print("FPS: "..tostring(fps), 5, 5 )
+		if current_room then love.graphics.print("Current Room: "..tostring(current_room_name),5, 20 )
+		else love.graphics.print("Current Room: ".. "None",5, 20 ) end
+	end
+end
+
+-- Frames flashing should last for  --
+function flash(frames)
+    flash_frames = frames
 end
 
 -- Memory Usage/Info Start--
