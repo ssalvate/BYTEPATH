@@ -16,6 +16,8 @@ function Player:new(area, x, y, opts)
     --  Acceleration  --
     self.a = 100
 
+    self.timer:every(5, function() self:tick() end)
+    
     --  Shooting  --
     self.attack_speed = 1
     self.timer:every(5, function() self.attack_speed = random(1, 2) end)
@@ -24,8 +26,20 @@ function Player:new(area, x, y, opts)
         self.timer:after(0.24/ self.attack_speed, f)
     end)
 
+    --  Stats  --
+    self.max_hp = 100
+    self.hp = self.max_hp
+
+    self.max_ammo = 100
+    self.ammo = self.max_ammo
+
+    -- Boost  --
+    self.max_boost = 100
+    self.boost = self.max_boost
     self.boosting = false
-    self.timer:every(5, function() self:tick() end)
+    self.can_boost = true
+    self.boost_timer = 0
+    self.boost_cooldown = 2
 
     --  Ships  --
     self.ship = 'Fighter'
@@ -141,15 +155,30 @@ function Player:update(dt)
     if self.y + self.w/2 > gh then self:die() end
     
     --  Boost --
-    self.boosting = false
+    self.boost = math.min(self.boost + 10*dt, self.max_boost)
+    self.boost_timer = self.boost_timer + dt
+    if self.boost_timer > self.boost_cooldown then self.can_boost = true end
     self.max_v = self.base_max_v
-    if input:down('up') then 
+    self.boosting = false
+    if input:down('up') and self.boost > 1 and self.can_boost then 
         self.boosting = true
         self.max_v = 1.5*self.base_max_v
+        self.boost = self.boost - 50*dt
+        if self.boost <= 1 then
+            self.boosting = false
+            self.can_boost = false
+            self.boost_timer = 0
+        end
     end
-    if input:down('down') then 
+    if input:down('down') and self.boost > 1 and self.can_boost then 
         self.boosting = true
-        self.max_v = 0.5*self.base_max_v 
+        self.max_v = 0.5*self.base_max_v
+        self.boost = self.boost - 50*dt
+        if self.boost <= 1 then
+            self.boosting = false
+            self.can_boost = false
+            self.boost_timer = 0
+        end
     end
 
     --  Trail -- 

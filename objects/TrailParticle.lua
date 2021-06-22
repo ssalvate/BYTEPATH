@@ -2,6 +2,7 @@ TrailParticle = GameObject:extend()
 
 function TrailParticle:new(area, x, y, opts)
     TrailParticle.super.new(self, area, x, y, opts)
+    self.depth = 75
     
     self.r = opts.r or random(4, 6)
     self.timer:tween(opts.d or random(0.3, 0.5), self, {r = 0}, 'linear', 

@@ -67,7 +67,10 @@ function Area:update(dt)
 end
 
 function Area:draw()
-    --if self.world then self.world:draw() end
+    table.sort(self.game_objects, function(a, b) 
+        if a.depth == b.depth then return a.creation_time < b.creation_time
+        else return a.depth < b.depth end
+    end)
     for _, game_objects in ipairs(self.game_objects) do game_objects:draw() end
 end
 
