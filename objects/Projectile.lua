@@ -18,10 +18,10 @@ function Projectile:update(dt)
     self.collider:setLinearVelocity(self.v*math.cos(self.r), self.v*math.sin(self.r))
 
     -- Off Screen --
-    if self.x < 0 then self:die() end
-    if self.y < 0 then self:die() end
-    if self.x > gw then self:die() end
-    if self.y > gh then self:die() end
+    if self.x - self.s < 0 then self:die() end
+    if self.y - self.s < 0 then self:die() end
+    if self.x + self.s > gw then self:die() end
+    if self.y + self.s > gh then self:die() end
 end
 
 function Projectile:draw()

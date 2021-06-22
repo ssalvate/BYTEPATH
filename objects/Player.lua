@@ -13,6 +13,7 @@ function Player:new(area, x, y, opts)
     self.v = 0
     self.base_max_v = 100
     self.max_v = self.base_max_v
+    --  Acceleration  --
     self.a = 100
 
     --  Shooting  --
@@ -134,23 +135,23 @@ function Player:update(dt)
     Player.super.update(self, dt)
 
     -- Collision -- 
-    if self.x < 0 then self:die() end
-    if self.y < 0 then self:die() end
-    if self.x > gw then self:die() end
-    if self.y > gh then self:die() end
+    if self.x - self.w/2 < 0 then self:die() end
+    if self.y - self.w/2 < 0 then self:die() end
+    if self.x + self.w/2 > gw then self:die() end
+    if self.y + self.w/2 > gh then self:die() end
     
     --  Boost --
     self.boosting = false
     self.max_v = self.base_max_v
     if input:down('up') then 
         self.boosting = true
-        self.max_v = 1.5*self.base_max_v 
+        self.max_v = 1.5*self.base_max_v
     end
     if input:down('down') then 
         self.boosting = true
         self.max_v = 0.5*self.base_max_v 
     end
-    
+
     --  Trail -- 
     self.trail_color = skill_point_color 
     if self.boosting then self.trail_color = boost_color end
@@ -172,7 +173,7 @@ function Player:draw()
             else 
                     return self.y + v + random(-1, 1) 
             end 
-            end)
+        end)
         love.graphics.polygon('line', points)
     end
     love.graphics.pop()

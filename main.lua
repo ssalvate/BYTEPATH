@@ -17,7 +17,7 @@ MODES =
     RELEASE = 2 
 }
 
-MODE = 1
+MODE = 0
 
 -- Resize the game window --
 function resize(s)
@@ -108,7 +108,7 @@ function BindInputs()
             current_room = nil
         end
     end)
-	input:bind('f4', function() camera:shake(4, 60, 1) end)
+	input:bind('f4', function() gotoRoom('Sandbox') end)
 	-- Gamepad Controller --
 	input:bind('dpleft', 'left')
 	input:bind('dpright', 'right')
