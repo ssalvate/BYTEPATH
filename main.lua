@@ -5,7 +5,10 @@ Input = require 'libraries/boipushy/Input'
 fn = require 'libraries/moses/moses'
 Camera = require 'libraries/hump/camera'
 Physics = require 'libraries/windfield'
+Vector = require 'libraries/hump/vector'
+draft = require('libraries/draft/draft')()
 
+require 'libraries/utf8'
 require 'utils'
 require 'GameObject'
 require 'globals'
@@ -31,6 +34,14 @@ function love.load()
 	love.graphics.setDefaultFilter('nearest', 'nearest')
     love.graphics.setLineStyle('rough')
 
+	--  Load fonts  --
+	loadFonts('resources/fonts')
+	if MODE == MODES.DEBUG then
+		print("Loading fonts: ")
+		for k, _ in pairs(fonts) do
+			print("    " .. k)
+		end
+	end
 	--load object folder files
 	local object_files = {}
     recursiveEnumerate('objects', object_files)
@@ -233,6 +244,21 @@ function recursiveEnumerate(folder, file_list)
 			recursiveEnumerate(file, file_list)
 		end
 	end
+end
+
+function loadFonts(path)
+    fonts = {}
+    local font_paths = {}
+    recursiveEnumerate(path, font_paths)
+    for i = 8, 16, 1 do
+        for _, font_path in pairs(font_paths) do
+            local last_forward_slash_index = font_path:find("/[^/]*$")
+            local font_name = font_path:sub(last_forward_slash_index+1, -5)
+            local font = love.graphics.newFont(font_path, i)
+            font:setFilter('nearest', 'nearest')
+            fonts[font_name .. '_' .. i] = font
+        end
+    end
 end
 
 function requireFiles(files)

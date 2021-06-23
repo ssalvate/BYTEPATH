@@ -7,6 +7,8 @@ function Player:new(area, x, y, opts)
     self.w, self.h = 12, 12
     self.collider = self.area.world:newCircleCollider(self.x, self.y, self.w)
     self.collider:setObject(self)
+    self.collider:setObject(self)
+    self.collider:setCollisionClass('Player')
 
     self.r = -math.pi/2
     self.rv = 1.66*math.pi
@@ -149,6 +151,17 @@ function Player:update(dt)
     Player.super.update(self, dt)
 
     -- Collision -- 
+    if self.collider:enter('Collectable') then
+        local collision_data = self.collider:getEnterCollisionData('Collectable')
+        local object = collision_data.collider:getObject()
+        if object:is(Ammo) then
+            object:die()
+            -- Add ammo
+        elseif object:is(Boost) then
+            object:die()
+            -- Add boost
+        end
+    end
     if self.x - self.w/2 < 0 then self:die() end
     if self.y - self.w/2 < 0 then self:die() end
     if self.x + self.w/2 > gw then self:die() end
