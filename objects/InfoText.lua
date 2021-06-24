@@ -11,18 +11,29 @@ function InfoText:new(area, x, y, opts)
     self.characters = {}
     for i = 1, #self.text do table.insert(self.characters, self.text:utf8sub(i, i)) end
     
+    --  Coliision with other infoTexts  --
+   local all_info_texts = self.area:getAllGameObjectsThat(function(o) 
+        if o:is(InfoText) and o.id ~= self.id then 
+            return true 
+        end 
+    end)
+    local collidesWithOtherInfoText = function()
+        for _, info_text in ipairs(all_info_texts) do
+            --  Does this even check properly?  --
+            return areRectanglesOverlapping(
+                self.x, self.y, self.x + self.w, self.y + self.h, 
+                info_text.x, info_text.y, info_text.x + info_text.w, info_text.y + info_text.h
+            )
+        end
+    end
+    while collidesWithOtherInfoText() do
+        self.x = self.x + table.random({-1, 0, 1})*self.w
+        self.y = self.y + table.random({-1, 0, 1})*self.h
+    end
+
     --  Colors  --
     self.background_colors = {}
     self.foreground_colors = {}
-    local default_colors = {default_color, hp_color, ammo_color, boost_color, skill_point_color}
-    local negative_colors = {
-        {255-default_color[1], 255-default_color[2], 255-default_color[3]}, 
-        {255-hp_color[1], 255-hp_color[2], 255-hp_color[3]}, 
-        {255-ammo_color[1], 255-ammo_color[2], 255-ammo_color[3]}, 
-        {255-boost_color[1], 255-boost_color[2], 255-boost_color[3]}, 
-        {255-skill_point_color[1], 255-skill_point_color[2], 255-skill_point_color[3]}
-    }
-    self.all_colors = fn.append(default_colors, negative_colors)
 
     --  Blinking  --
     self.visible = true
@@ -34,15 +45,15 @@ function InfoText:new(area, x, y, opts)
             local random_characters = '0123456789!@#$%¨&*()-=+[]^~/;?><.,|abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYXZ'
             for i, character in ipairs(self.characters) do
                 --  Random Chars  --
-                if love.math.random(1, 20) <= 1 then
+                if love.math.random(1, 5) <= 1 then
                     local r = love.math.random(1, #random_characters)
                     self.characters[i] = random_characters:utf8sub(r, r)
                 else self.characters[i] = character end
                 --  Background Colors  --
-                if love.math.random(1, 10) <= 1 then self.background_colors[i] = table.random(self.all_colors)
+                if love.math.random(1, 20) <= 1 then self.background_colors[i] = table.random(all_colors)
                 else self.background_colors[i] = nil end
 
-                if love.math.random(1, 10) <= 2 then self.foreground_colors[i] = table.random(self.all_colors)
+                if love.math.random(1, 10) <= 2 then self.foreground_colors[i] = table.random(all_colors)
                 else self.foreground_colors[i] = nil end
             end
         end)

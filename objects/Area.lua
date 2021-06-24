@@ -10,6 +10,17 @@ function Area:addPhysicsWorld()
     self.world = Physics.newWorld(0, 0, true)
 end
 
+--  Returns all game objects inside an Area that pass a filter function  --
+function Area:getAllGameObjectsThat(filter)
+    local out = {}
+    for _, game_object in pairs(self.game_objects) do
+        if filter(game_object) then
+            table.insert(out, game_object)
+        end
+    end
+    return out
+end
+
 -- Returns list of closest objects to object_type
 function Area:getClosestObject(x, y, radius, object_types)
     local objects = self:queryCircleArea(x, y, radius, object_types)

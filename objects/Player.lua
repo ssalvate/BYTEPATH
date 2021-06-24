@@ -2,6 +2,8 @@ Player = GameObject:extend()
 
 function Player:new(area, x, y, opts)
     Player.super.new(self, area, x, y, opts)
+    --  Global  --
+    skill_points = 0
 
     self.x, self.y = x, y
     self.w, self.h = 12, 12
@@ -146,6 +148,22 @@ function DefineShipVisuals(self)
         }
     end
 end
+ 
+function Player:addAmmo(amount)
+    self.ammo = math.max(math.min(self.ammo + amount, self.max_ammo), 0)
+end
+
+function Player:addBoost(amount)
+    self.boost = math.max(math.min(self.boost + amount, self.max_boost), 0)
+end
+
+function Player:addHP(amount)
+    self.hp = math.max(math.min(self.hp + amount, self.max_hp), 0)
+end
+
+function Player:addSP(amount)
+    skill_points = skill_points + amount
+end
 
 function Player:update(dt)
     Player.super.update(self, dt)
@@ -156,10 +174,16 @@ function Player:update(dt)
         local object = collision_data.collider:getObject()
         if object:is(Ammo) then
             object:die()
-            -- Add ammo
+            self:addAmmo(5)
         elseif object:is(Boost) then
             object:die()
-            -- Add boost
+            self:addBoost(math.floor(self.max_boost/4))
+        elseif object:is(HP) then
+            object:die()
+            self:addHP(math.floor(self.max_hp/4))
+        elseif object:is(SkillPoint) then
+            object:die()
+            self:addSP(1)
         end
     end
     if self.x - self.w/2 < 0 then self:die() end
