@@ -12,6 +12,7 @@ function Boost:new(area, x, y, opts)
     self.collider:setObject(self)
     self.collider:setCollisionClass('Collectable')
     self.collider:setFixedRotation(false)
+    
     self.v = -direction*random(20, 40)
     self.collider:setLinearVelocity(self.v, 0)
     self.collider:applyAngularImpulse(random(-24, 24))
@@ -25,7 +26,8 @@ end
 
 function Boost:draw()
     love.graphics.setColor(boost_color)
-    pushRotate(self.x, self.y, self.collider:getAngle())
+    
+    
     draft:rhombus(self.x, self.y, 1.5*self.w, 1.5*self.h, 'line')
     draft:rhombus(self.x, self.y, 0.5*self.w, 0.5*self.h, 'fill')
     love.graphics.pop()

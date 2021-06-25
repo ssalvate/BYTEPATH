@@ -9,7 +9,6 @@ function Player:new(area, x, y, opts)
     self.w, self.h = 12, 12
     self.collider = self.area.world:newCircleCollider(self.x, self.y, self.w)
     self.collider:setObject(self)
-    self.collider:setObject(self)
     self.collider:setCollisionClass('Player')
 
     self.r = -math.pi/2
@@ -23,14 +22,11 @@ function Player:new(area, x, y, opts)
     self.timer:every(5, function() self:tick() end)
     
     --  Shooting  --
-    self.attack_speed = 1
-    self.timer:every(5, function() self.attack_speed = random(1, 2) end)
-    self.timer:after(0.24/ self.attack_speed, function(f)
-        self:shoot()
-        self.timer:after(0.24/ self.attack_speed, f)
-    end)
+    self.shoot_timer = 0
+    self.shoot_cooldown = 0.24
+    self:setAttack('Side')
 
-    --  Stats  --
+    --  Stats  --d
     self.max_hp = 100
     self.hp = self.max_hp
 
@@ -184,6 +180,11 @@ function Player:update(dt)
         elseif object:is(SkillPoint) then
             object:die()
             self:addSP(1)
+        elseif object:is(Attack) then
+            --playGameItem()
+            object:die()
+            self:setAttack(object.attack)
+            --current_room.score = current_room.score + 200
         end
     end
     if self.x - self.w/2 < 0 then self:die() end
@@ -191,6 +192,13 @@ function Player:update(dt)
     if self.x + self.w/2 > gw then self:die() end
     if self.y + self.w/2 > gh then self:die() end
     
+    --  Shooting  --
+    self.shoot_timer = self.shoot_timer + dt
+    if self.shoot_timer > self.shoot_cooldown then
+        self.shoot_timer = 0
+        self:shoot()
+    end
+
     --  Boost --
     self.boost = math.min(self.boost + 10*dt, self.max_boost)
     self.boost_timer = self.boost_timer + dt
@@ -263,14 +271,66 @@ function Player:tick()
     self.area:addGameObject('TickEffect', self.x, self.y, {parent = self})
 end
 
+function Player:setAttack(attack)
+    self.attack = attack
+    self.shoot_cooldown = attacks[attack].cooldown
+    self.ammo = self.max_ammo
+end
+
 function Player:shoot()
     local d = 1.2*self.w
+    self.area:addGameObject('ShootEffect', 
+    self.x + d*math.cos(self.r), self.y + d*math.sin(self.r), {player = self, d = d})
 
-    self.area:addGameObject('ShootEffect', self.x + d*math.cos(self.r), 
-    self.y + d*math.sin(self.r), {player = self, d = d})
+    if self.attack == 'Neutral' then
+        self.area:addGameObject('Projectile', 
+      	self.x + 1.5*d*math.cos(self.r), self.y + 1.5*d*math.sin(self.r), {r = self.r, attack = self.attack})
+    elseif self.attack == 'Double' then
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        self.area:addGameObject('Projectile', 
+    	self.x + 1.5*d*math.cos(self.r + math.pi/12), 
+    	self.y + 1.5*d*math.sin(self.r + math.pi/12), 
+    	{r = self.r + math.pi/12, attack = self.attack})
+        
+        self.area:addGameObject('Projectile', 
+    	self.x + 1.5*d*math.cos(self.r - math.pi/12),
+    	self.y + 1.5*d*math.sin(self.r - math.pi/12), 
+    	{r = self.r - math.pi/12, attack = self.attack})
+    elseif self.attack == 'Triple' then 
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        self.area:addGameObject('Projectile', 
+    	self.x + 1.5*d*math.cos(self.r + math.pi/12), 
+    	self.y + 1.5*d*math.sin(self.r + math.pi/12), 
+    	{r = self.r + math.pi/12, attack = self.attack})
 
-    self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r), 
-    self.y + 1.5*d*math.sin(self.r), {r = self.r, v = 100})
+        self.area:addGameObject('Projectile', 
+        self.x + 1.5*d*math.cos(self.r), self.y + 1.5*d*math.sin(self.r), {r = self.r, attack = self.attack})
+        
+        self.area:addGameObject('Projectile', 
+    	self.x + 1.5*d*math.cos(self.r - math.pi/12),
+    	self.y + 1.5*d*math.sin(self.r - math.pi/12), 
+    	{r = self.r - math.pi/12, attack = self.attack})
+    elseif self.attack == 'Rapid' then 
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r), self.y + 1.5*d*math.sin(self.r), {r = self.r, attack = self.attack})
+    elseif self.attack == 'Spread' then
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        local random_angle = random(-math.pi/8, math.pi/8)
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r + random_angle), self.y + 1.5*d*math.sin(self.r + random_angle), {r = self.r + random_angle, attack = self.attack})
+    elseif self.attack == 'Back' then
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r), self.y + 1.5*d*math.sin(self.r), {r = self.r, attack = self.attack})
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r - math.pi), self.y + 1.5*d*math.sin(self.r - math.pi), {r = self.r - math.pi, attack = self.attack})
+    elseif self.attack == 'Side' then
+        self.ammo = self.ammo - attacks[self.attack].ammo
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r), self.y + 1.5*d*math.sin(self.r), {r = self.r, attack = self.attack})
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r - math.pi/2), self.y + 1.5*d*math.sin(self.r - math.pi/2), {r = self.r - math.pi/2, attack = self.attack})
+        self.area:addGameObject('Projectile', self.x + 1.5*d*math.cos(self.r + math.pi/2), self.y + 1.5*d*math.sin(self.r + math.pi/2), {r = self.r + math.pi/2, attack = self.attack})
+    end
+    if self.ammo <= 0 then 
+        self:setAttack('Neutral')
+        self.ammo = self.max_ammo
+    end
 end
 
 function Player:destroy()

@@ -12,7 +12,7 @@ function Stage:new()
     self.player = self.area:addGameObject('Player', gw/2, gh/2)
 
     input:bind('p', function() 
-        self.area:addGameObject('SkillPoint', random(0, gw), random(0, gh)) 
+        self.area:addGameObject('Attack', random(0, gw), random(0, gh)) 
     end)
 end
 

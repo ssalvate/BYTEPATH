@@ -120,6 +120,13 @@ function BindInputs()
         end
     end)
 	input:bind('f4', function() gotoRoom('Sandbox') end)
+	input:bind('f9', function()--  Cycle Modes  --
+		if MODE == 2 then
+			MODE = 0
+		else
+			MODE = MODE + 1 
+		end
+	end)
 	-- Gamepad Controller --
 	input:bind('dpleft', 'left')
 	input:bind('dpright', 'right')
@@ -179,10 +186,17 @@ function love.draw()
     end
 
 	if MODE < 2 then
+		if MODE == 0 then 
+			m = 'Debug'
+		elseif MODE == 1 then
+			m = 'Display'
+		end
+		love.graphics.print("MODE: "..m, 5, 5 )
+		
         fps = math.floor( 1.0 / love.timer.getDelta() )
-        love.graphics.print("FPS: "..tostring(fps), 5, 5 )
-		if current_room then love.graphics.print("Current Room: "..tostring(current_room_name),5, 20 )
-		else love.graphics.print("Current Room: ".. "None",5, 20 ) end
+        love.graphics.print("FPS: "..tostring(fps), 5, 25 )
+		if current_room then love.graphics.print("Current Room: "..tostring(current_room_name),5, 45 )
+		else love.graphics.print("Current Room: ".. "None",5, 45 ) end
 	end
 end
 
