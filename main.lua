@@ -75,7 +75,7 @@ function love.load()
 	current_room = nil
 	current_room_name = nil
 	--gotoRoom('Stage')
-	resize(2) --Had to move after camera()
+	resize(3) --Had to move after camera()
 	
 	slow_amount = 1
 end

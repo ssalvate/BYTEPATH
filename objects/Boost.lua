@@ -3,6 +3,7 @@ Boost = GameObject:extend()
 function Boost:new(area, x, y, opts)
     Boost.super.new(self, area, x, y, opts)
 
+    --  Direction is the side its spawned on  --
     local direction = table.random({-1, 1})
     self.x = gw/2 + direction*(gw/2 + 48)
     self.y = random(48, gh - 48)
