@@ -6,6 +6,6 @@
 
 ## What I learned
 
-* Object oriented coding with lua
+* Object oriented coding with lua and basics of Love2D game engine
 * Gameplay loop and update functions while tying in object inheritence
 * 2D Vector math + simple physics
