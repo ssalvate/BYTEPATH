@@ -15,6 +15,7 @@ function Stage:new()
 
     input:bind('p', function() 
         self.area:addGameObject('Shooter', random(0, gw), random(0, gh)) 
+        self.area:addGameObject('Rock', random(0, gw), random(0, gh)) 
     end)
 end
 
